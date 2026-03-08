@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SkyWatcher — Teleskop Görüntü Analiz Sistemi</title>
+    <title>SkyWatcher — Telescope Image Analysis System</title>
     <style>
       /* ===== RESET & BASE ===== */
       *,
@@ -856,9 +856,9 @@
         >
         <div class="nav-links">
           <a href="#pipeline">Pipeline</a>
-          <a href="#ml">ML Sonuçlar</a>
-          <a href="#grafik">Grafikler</a>
-          <a href="#analiz">Analiz</a>
+          <a href="#ml">ML Results</a>
+          <a href="#grafik">Charts</a>
+          <a href="#analiz">Analyze</a>
         </div>
       </div>
     </nav>
@@ -866,17 +866,17 @@
     <!-- HERO -->
     <section class="hero">
       <div class="container">
-        <div class="hero-eyebrow fade-in">TUG Teleskop Otomasyonu</div>
-        <h1 class="fade-in">Gökyüzü Analiz<br />Sistemi</h1>
+        <div class="hero-eyebrow fade-in">TUG Telescope Automation</div>
+        <h1 class="fade-in">Sky Analysis<br />System</h1>
         <p class="fade-in">
-          Ham teleskop görüntülerini otomatik sınıflandıran, ay maskeleyen ve
-          makine öğrenmesi ile doğrulayan bir bilgisayarlı görü pipeline'ı.
+          A computer vision pipeline that automatically classifies raw telescope
+          images, masks the moon, and validates results with machine learning.
         </p>
         <div class="hero-tags fade-in">
           <span class="badge badge-cyan">OpenCV</span>
           <span class="badge badge-cyan">HoughCircles</span>
           <span class="badge badge-green">SVM · KNN</span>
-          <span class="badge badge-amber">13,654 Görüntü</span>
+          <span class="badge badge-amber">13,654 Images</span>
         </div>
       </div>
     </section>
@@ -887,21 +887,21 @@
     <section class="section" id="pipeline">
       <div class="container">
         <div class="section-header fade-in">
-          <div class="section-label">Faz 1 → 4</div>
-          <h2 class="section-title">İşlem Pipeline'ı</h2>
+          <div class="section-label">Phase 1 → 4</div>
+          <h2 class="section-title">Processing Pipeline</h2>
           <p class="section-sub">
-            Dört fazlı otomatik veri işleme ve sınıflandırma sistemi.
+            Four-phase automated data processing and classification system.
           </p>
         </div>
         <div class="pipeline-grid">
           <div class="phase-card fade-in">
-            <div class="phase-num">Faz 1</div>
+            <div class="phase-num">Phase 1</div>
             <div class="phase-icon">📅</div>
-            <h3>Gece/Gündüz Ayırma</h3>
+            <h3>Day / Night Sorting</h3>
             <p>
-              Dosya adından tarih çıkarılır. <code>ephem</code> kütüphanesiyle
-              güneş açısı hesaplanır (eşik: −12°). Gece ve gündüz görüntüleri
-              otomatik ayrıştırılır.
+              Datetime is extracted from the filename. Sun altitude is computed
+              via the <code>ephem</code> library (threshold: −12°). Night and
+              day images are automatically separated.
             </p>
             <div class="phase-tags">
               <span class="tag">day_night_sorter.py</span>
@@ -910,13 +910,13 @@
             </div>
           </div>
           <div class="phase-card fade-in">
-            <div class="phase-num">Faz 2</div>
+            <div class="phase-num">Phase 2</div>
             <div class="phase-icon">🌙</div>
-            <h3>Ay Maskeleme</h3>
+            <h3>Moon Masking</h3>
             <p>
-              Gece görüntülerinde Gaussian Blur + Hough Circle Transform ile ay
-              tespit edilir. Ay bölgesi siyah daire ile maskelenerek
-              sınıflandırıcıyı yanıltmaması sağlanır.
+              The moon is detected in night images using Gaussian Blur + Hough
+              Circle Transform. The moon region is masked with a black circle to
+              prevent it from skewing the classifier.
             </p>
             <div class="phase-tags">
               <span class="tag">moon_masker.py</span>
@@ -925,13 +925,13 @@
             </div>
           </div>
           <div class="phase-card fade-in">
-            <div class="phase-num">Faz 3</div>
-            <div class="phase-icon">☁️</div>
-            <h3>Gökyüzü Sınıflandırma</h3>
+            <div class="phase-num">Phase 3</div>
+            <div class="phase-icon">⛅️</div>
+            <h3>Sky Classification</h3>
             <p>
-              Maskelenmiş görüntülerde ortalama parlaklık ve bulut yoğunluğu
-              hesaplanır. Eşik tabanlı kural motoru: CLEAR (&lt;20), NEUTRAL
-              (20–45), CLOUDY (&gt;45).
+              Mean brightness and cloud density are computed on masked images.
+              Threshold-based rule engine: CLEAR (&lt;20), NEUTRAL (20–45),
+              CLOUDY (&gt;45).
             </p>
             <div class="phase-tags">
               <span class="tag">sky_classifier.py</span>
@@ -940,13 +940,13 @@
             </div>
           </div>
           <div class="phase-card fade-in">
-            <div class="phase-num">Faz 4</div>
+            <div class="phase-num">Phase 4</div>
             <div class="phase-icon">🤖</div>
-            <h3>ML Değerlendirme</h3>
+            <h3>ML Evaluation</h3>
             <p>
-              3 özellik (parlaklık, bulut oranı, std sapma) çıkarılır. SVM (RBF)
-              ve KNN (k=5) eğitilir. 80/20 train-test split, StandardScaler,
-              confusion matrix.
+              3 features (brightness, cloud ratio, std deviation) are extracted.
+              SVM (RBF) and KNN (k=5) are trained. 80/20 train-test split,
+              StandardScaler, confusion matrix.
             </p>
             <div class="phase-tags">
               <span class="tag">evaluate.py</span>
@@ -960,15 +960,14 @@
 
     <div class="divider"></div>
 
-    <!-- ML SONUÇLAR -->
+    <!-- ML RESULTS -->
     <section class="section" id="ml">
       <div class="container">
         <div class="section-header fade-in">
-          <div class="section-label">Faz 4 Çıktıları</div>
-          <h2 class="section-title">ML Değerlendirme Sonuçları</h2>
+          <div class="section-label">Phase 4 Outputs</div>
+          <h2 class="section-title">ML Evaluation Results</h2>
           <p class="section-sub">
-            13,654 görüntü · 80/20 train-test split · StandardScaler ·
-            stratified
+            13,654 images · 80/20 train-test split · StandardScaler · stratified
           </p>
         </div>
 
@@ -976,27 +975,27 @@
         <div class="stat-grid fade-in">
           <div class="stat-card">
             <div class="stat-val cyan">13,654</div>
-            <div class="stat-label">Toplam gece görüntüsü</div>
+            <div class="stat-label">Total night images</div>
           </div>
           <div class="stat-card">
             <div class="stat-val green">796</div>
-            <div class="stat-label">CLEAR (açık)</div>
+            <div class="stat-label">CLEAR (open sky)</div>
           </div>
           <div class="stat-card">
             <div class="stat-val amber">9,760</div>
-            <div class="stat-label">NEUTRAL (parçalı)</div>
+            <div class="stat-label">NEUTRAL (partly cloudy)</div>
           </div>
           <div class="stat-card">
             <div class="stat-val" style="color: var(--red)">3,098</div>
-            <div class="stat-label">CLOUDY (kapalı)</div>
+            <div class="stat-label">CLOUDY (overcast)</div>
           </div>
           <div class="stat-card">
             <div class="stat-val blue">10,923</div>
-            <div class="stat-label">Train seti (%80)</div>
+            <div class="stat-label">Train set (80%)</div>
           </div>
           <div class="stat-card">
             <div class="stat-val blue">2,731</div>
-            <div class="stat-label">Test seti (%20)</div>
+            <div class="stat-label">Test set (20%)</div>
           </div>
         </div>
 
@@ -1141,8 +1140,8 @@
                   colspan="3"
                   style="color: var(--text-dim); font-size: 0.8rem"
                 >
-                  Sadece mean_brightness eşiğine dayanır — class imbalance
-                  yanlılığı var
+                  Based solely on mean_brightness threshold — class imbalance
+                  bias present
                 </td>
               </tr>
             </tbody>
@@ -1157,11 +1156,12 @@
     <section class="section" id="grafik">
       <div class="container">
         <div class="section-header fade-in">
-          <div class="section-label">evaluate.py Çıktıları</div>
-          <h2 class="section-title">Görselleştirme</h2>
+          <div class="section-label">evaluate.py Outputs</div>
+          <h2 class="section-title">Visualisation</h2>
           <p class="section-sub">
-            Görüntü yükleyince confusion matrix'te tahmin edilen sınıf
-            vurgulanır ve karşılaştırma grafiği o sınıfa özel metriklere geçer.
+            When an image is uploaded, the predicted class column is highlighted
+            in the confusion matrix and the comparison chart switches to
+            class-specific metrics.
           </p>
         </div>
         <div class="charts-grid">
@@ -1170,18 +1170,18 @@
             <div class="chart-header">
               <h3>Confusion Matrix — SVM (RBF)</h3>
               <p>
-                Test seti üzerinde SVM tahmin hataları · görüntü yükleyince
-                aktif sınıf vurgulanır
+                SVM prediction errors on the test set · active class is
+                highlighted after upload
               </p>
             </div>
             <div class="cm-body">
-              <div class="cm-top-axis">Tahmin Edilen</div>
+              <div class="cm-top-axis">Predicted</div>
               <div class="cm-inner">
-                <div class="cm-left-axis"><span>Gerçek</span></div>
+                <div class="cm-left-axis"><span>Actual</span></div>
                 <div id="cm-svm" class="cm-grid"></div>
               </div>
               <div id="cm-svm-hint" class="cm-hint">
-                Görüntü yükleyince ilgili sütun vurgulanır
+                Upload an image to highlight the relevant column
               </div>
             </div>
           </div>
@@ -1191,18 +1191,18 @@
             <div class="chart-header">
               <h3>Confusion Matrix — KNN (k=5)</h3>
               <p>
-                Test seti üzerinde KNN tahmin hataları · görüntü yükleyince
-                aktif sınıf vurgulanır
+                KNN prediction errors on the test set · active class is
+                highlighted after upload
               </p>
             </div>
             <div class="cm-body">
-              <div class="cm-top-axis">Tahmin Edilen</div>
+              <div class="cm-top-axis">Predicted</div>
               <div class="cm-inner">
-                <div class="cm-left-axis"><span>Gerçek</span></div>
+                <div class="cm-left-axis"><span>Actual</span></div>
                 <div id="cm-knn" class="cm-grid"></div>
               </div>
               <div id="cm-knn-hint" class="cm-hint">
-                Görüntü yükleyince ilgili sütun vurgulanır
+                Upload an image to highlight the relevant column
               </div>
             </div>
           </div>
@@ -1220,13 +1220,13 @@
                 "
               >
                 <h3 id="comp-title">
-                  Model Karşılaştırma — SVM vs KNN vs Baseline
+                  Model Comparison — SVM vs KNN vs Baseline
                 </h3>
                 <div id="comp-badge"></div>
               </div>
               <p id="comp-subtitle">
-                Genel test seti metrikleri · görüntü yükleyince tahmin edilen
-                sınıfa özel güvenilirlik gösterilir
+                Overall test set metrics · upload an image to see class-specific
+                reliability
               </p>
             </div>
             <div class="chart-body">
@@ -1243,13 +1243,13 @@
     <section class="section" id="analiz">
       <div class="container">
         <div class="section-header fade-in">
-          <div class="section-label">Canlı Demo</div>
-          <h2 class="section-title">Görüntü Analizi</h2>
+          <div class="section-label">Live Demo</div>
+          <h2 class="section-title">Image Analysis</h2>
           <p class="section-sub">
-            Bir teleskop görüntüsü yükleyin — Faz 1→3 pipeline'ı gerçek zamanlı
-            çalıştırılır. Dosya adında tarih varsa
-            (<code>YYYY_MM_DD__HH_MM_SS</code>) otomatik gece/gündüz tespiti
-            yapılır.
+            Upload a telescope image — the Phase 1→3 pipeline runs in real time.
+            If the filename contains the date
+            (<code>YYYY_MM_DD__HH_MM_SS</code>), day/night detection is
+            performed automatically.
           </p>
         </div>
 
@@ -1260,8 +1260,8 @@
             accept=".jpg,.jpeg,.png,.bmp,.tiff,.tif"
           />
           <div class="upload-icon">📡</div>
-          <h3>Görüntü Yükle</h3>
-          <p>Sürükle-bırak veya tıkla seç</p>
+          <h3>Upload Image</h3>
+          <p>Drag &amp; drop or click to select</p>
           <div class="upload-formats">
             <span class="tag">JPG</span>
             <span class="tag">JPEG</span>
@@ -1274,19 +1274,19 @@
         <!-- Spinner -->
         <div id="spinner">
           <div class="spinner-ring"></div>
-          <p>Analiz ediliyor…</p>
+          <p>Analysing…</p>
         </div>
 
-        <!-- Sonuç Paneli -->
+        <!-- Result Panel -->
         <div id="result-panel">
           <div class="result-header">
             <div id="result-condition-badge"></div>
-            <h3 id="result-title">Analiz Sonucu</h3>
+            <h3 id="result-title">Analysis Result</h3>
             <span class="filename" id="result-filename"></span>
           </div>
           <div class="result-body">
             <div class="result-image-wrap">
-              <img id="result-img" src="" alt="Yüklenen görüntü" />
+              <img id="result-img" src="" alt="Uploaded image" />
             </div>
             <div class="result-metrics" id="result-metrics"></div>
           </div>
@@ -1298,7 +1298,7 @@
     <footer>
       <div class="container">
         <p>
-          SkyWatcher &mdash; TUG Bakırtepe Teleskop Otomasyon Projesi
+          SkyWatcher &mdash; TUG Bakırtepe Telescope Automation Project
           &nbsp;·&nbsp; <span id="footer-year"></span> &nbsp;·&nbsp; Python ·
           OpenCV · scikit-learn · Flask
         </p>
@@ -1395,7 +1395,7 @@
           .catch((err) => {
             spinner.style.display = "none";
             renderResult(
-              { error: "Sunucuya bağlanılamadı: " + err.message },
+              { error: "Failed to connect to server: " + err.message },
               file.name,
             );
             resultPanel.style.display = "block";
@@ -1406,12 +1406,12 @@
         document.getElementById("result-filename").textContent = filename;
 
         if (data.error) {
-          document.getElementById("result-title").textContent = "Hata";
+          document.getElementById("result-title").textContent = "Error";
           document.getElementById("result-condition-badge").innerHTML =
-            `<span class="badge" style="background:rgba(255,94,126,.15);color:var(--red)">❌ Hata</span>`;
+            `<span class="badge" style="background:rgba(255,94,126,.15);color:var(--red)">❌ Error</span>`;
           document.getElementById("result-metrics").innerHTML = `
         <div class="metric-row">
-          <span class="mkey">Hata Mesajı</span>
+          <span class="mkey">Error Message</span>
           <span class="mval" style="color:var(--red)">${data.error}</span>
         </div>`;
           return;
@@ -1442,9 +1442,9 @@
           }[status] || "pill-day";
         const pillLabel =
           {
-            OBSERVABLE: "Gözlem Yapılabilir",
-            RISKY: "Riskli",
-            NOTOBSERVABLE: "Gözlem Yapılamaz",
+            OBSERVABLE: "Observable",
+            RISKY: "Risky",
+            NOTOBSERVABLE: "Not Observable",
           }[status] || timeOfDay;
 
         document.getElementById("result-title").textContent =
@@ -1455,16 +1455,16 @@
         // Metric rows
         const rows = [
           [
-            "⏰ Zaman",
+            "⏰ Time",
             `${timeEmoji} ${timeOfDay}` +
               (data.datetime ? ` · ${data.datetime}` : ""),
           ],
           [
-            "☁️ Gökyüzü Durumu",
+            "☁️ Sky Condition",
             `<span class="${condClass}">${condition}</span>`,
           ],
           [
-            "💡 Ortalama Parlaklık",
+            "💡 Mean Brightness",
             data.mean_brightness != null
               ? data.mean_brightness.toFixed(2)
               : "—",
@@ -1472,20 +1472,20 @@
         ];
 
         if (data.cloud_coverage_percent != null) {
-          rows.push(["🌫️ Bulut Oranı", `%${data.cloud_coverage_percent}`]);
+          rows.push(["🌫️ Cloud Coverage", `${data.cloud_coverage_percent}%`]);
         }
         if (data.std_deviation != null) {
-          rows.push(["📈 Std Sapma", data.std_deviation.toFixed(2)]);
+          rows.push(["📈 Std Deviation", data.std_deviation.toFixed(2)]);
         }
         if (data.blue_ratio != null) {
-          rows.push(["🔵 Mavi Oran", data.blue_ratio.toFixed(4)]);
+          rows.push(["🔵 Blue Ratio", data.blue_ratio.toFixed(4)]);
         }
 
         rows.push([
-          "🌙 Ay Tespiti",
+          "🌙 Moon Detection",
           data.moon_detected
-            ? `✅ Tespit edildi · (${data.moon_center?.join(", ")}) · r=${data.moon_radius}px · güven ${data.moon_confidence}%`
-            : "❌ Tespit edilmedi",
+            ? `✅ Detected · (${data.moon_center?.join(", ")}) · r=${data.moon_radius}px · confidence ${data.moon_confidence}%`
+            : "❌ Not detected",
         ]);
 
         document.getElementById("result-metrics").innerHTML = rows
@@ -1572,7 +1572,7 @@
             html +=
               `<div class="cm-cell ${isDiag ? "cm-diag" : "cm-off"}" ` +
               `data-col="${ci}" data-row="${ri}" style="--intensity:${intensity}" ` +
-              `title="Gerçek: ${classes[ri]} → Tahmin: ${classes[ci]} = ${val.toLocaleString()}">`;
+              `title="Actual: ${classes[ri]} → Predicted: ${classes[ci]} = ${val.toLocaleString()}">`;
             html += `<span class="cm-val">${val.toLocaleString()}</span>`;
             html += `<span class="cm-pct">${pct}%</span>`;
             html += `</div>`;
@@ -1594,7 +1594,8 @@
 
         if (predictedIdx < 0) {
           if (hint) {
-            hint.textContent = "Görüntü yükleyince ilgili sütun vurgulanır";
+            hint.textContent =
+              "Upload an image to highlight the relevant column";
             hint.classList.remove("active");
           }
           return;
@@ -1620,7 +1621,7 @@
         const condEmoji =
           { CLEAR: "✨", NEUTRAL: "⛅", CLOUDY: "☁️" }[cls] || "";
         if (hint) {
-          hint.textContent = `${condEmoji} "${cls}" olarak tahmin edildi — vurgulanan sütun bu sınıfa ait tüm tahminleri gösterir`;
+          hint.textContent = `${condEmoji} "${cls}" predicted — highlighted column shows all predictions for this class`;
           hint.classList.add("active");
         }
       }
@@ -1724,11 +1725,10 @@
           compChart.data.datasets[2].data = [0.993, null, null, null];
           compChart.data.datasets[2].label = "Baseline";
           if (titleEl)
-            titleEl.textContent =
-              "Model Karşılaştırma — SVM vs KNN vs Baseline";
+            titleEl.textContent = "Model Comparison — SVM vs KNN vs Baseline";
           if (subEl)
             subEl.textContent =
-              "Genel test seti metrikleri · görüntü yükleyince tahmin edilen sınıfa özel güvenilirlik gösterilir";
+              "Overall test set metrics · upload an image to see class-specific reliability";
           if (badgeEl) badgeEl.innerHTML = "";
         } else {
           const svm = ML_DATA.svm.perClass[predictedClass];
@@ -1741,9 +1741,9 @@
           compChart.data.datasets[2].data = [null, null, null];
           compChart.data.datasets[2].label = "Baseline (N/A)";
           if (titleEl)
-            titleEl.textContent = `Model Güvenilirliği — "${predictedClass}" Sınıfı`;
+            titleEl.textContent = `Model Reliability — "${predictedClass}" Class`;
           if (subEl)
-            subEl.textContent = `Yüklenen görüntü ${predictedClass} tahmin edildi · Bu sınıf için SVM vs KNN performansı`;
+            subEl.textContent = `Uploaded image predicted as ${predictedClass} · SVM vs KNN performance for this class`;
           const condColor =
             {
               CLEAR: "var(--green)",
