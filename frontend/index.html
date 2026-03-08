@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkyWatcher — Teleskop Görüntü Analiz Sistemi</title>
+    <style>
+      /* ===== RESET & BASE ===== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0a0e1a;
+        --bg2: #0f1527;
+        --bg3: #141d35;
+        --border: rgba(99, 140, 255, 0.15);
+        --blue: #4f8cff;
+        --blue-dim: #2d5fcc;
+        --cyan: #38d9f5;
+        --green: #3dffa0;
+        --amber: #ffc94d;
+        --red: #ff5e7e;
+        --text: #e8eaf6;
+        --text-dim: #8892b0;
+        --glow: 0 0 24px rgba(79, 140, 255, 0.18);
+        --card-glow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        --radius: 14px;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* ===== STARFIELD BACKGROUND ===== */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 120% 60% at 50% -10%,
+            rgba(79, 140, 255, 0.08) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 80% 40% at 80% 110%,
+            rgba(56, 217, 245, 0.06) 0%,
+            transparent 60%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ===== LAYOUT ===== */
+      .container {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 0 24px;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ===== NAV ===== */
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(10, 14, 26, 0.88);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-inner {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 0 24px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .nav-logo {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--cyan);
+        letter-spacing: -0.5px;
+      }
+      .nav-logo span {
+        color: var(--text-dim);
+        font-weight: 400;
+        font-size: 0.85rem;
+        margin-left: 8px;
+      }
+      .nav-links {
+        margin-left: auto;
+        display: flex;
+        gap: 4px;
+      }
+      .nav-links a {
+        color: var(--text-dim);
+        text-decoration: none;
+        font-size: 0.875rem;
+        padding: 6px 14px;
+        border-radius: 8px;
+        transition: all 0.2s;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+      .badge-cyan {
+        background: rgba(56, 217, 245, 0.15);
+        color: var(--cyan);
+      }
+      .badge-green {
+        background: rgba(61, 255, 160, 0.15);
+        color: var(--green);
+      }
+      .badge-amber {
+        background: rgba(255, 201, 77, 0.15);
+        color: var(--amber);
+      }
+
+      /* ===== HERO ===== */
+      .hero {
+        padding: 80px 0 60px;
+        text-align: center;
+      }
+      .hero-eyebrow {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--cyan);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+      }
+      .hero h1 {
+        font-size: clamp(2.2rem, 5vw, 3.6rem);
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -1.5px;
+        background: linear-gradient(
+          135deg,
+          #ffffff 0%,
+          var(--cyan) 60%,
+          var(--blue) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 20px;
+      }
+      .hero p {
+        font-size: 1.05rem;
+        color: var(--text-dim);
+        max-width: 640px;
+        margin: 0 auto 32px;
+      }
+      .hero-tags {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      /* ===== SECTION TITLES ===== */
+      .section {
+        padding: 60px 0;
+      }
+      .section-header {
+        margin-bottom: 36px;
+      }
+      .section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--blue);
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .section-title {
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+      .section-sub {
+        color: var(--text-dim);
+        margin-top: 8px;
+        font-size: 0.95rem;
+      }
+
+      /* ===== PIPELINE CARDS ===== */
+      .pipeline-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+      .phase-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition:
+          border-color 0.25s,
+          box-shadow 0.25s;
+      }
+      .phase-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+      .phase-card:nth-child(1)::before {
+        background: linear-gradient(90deg, var(--blue), var(--cyan));
+      }
+      .phase-card:nth-child(2)::before {
+        background: linear-gradient(90deg, var(--cyan), var(--green));
+      }
+      .phase-card:nth-child(3)::before {
+        background: linear-gradient(90deg, var(--green), var(--amber));
+      }
+      .phase-card:nth-child(4)::before {
+        background: linear-gradient(90deg, var(--amber), var(--red));
+      }
+      .phase-card:hover {
+        border-color: rgba(99, 140, 255, 0.4);
+        box-shadow: var(--glow);
+      }
+      .phase-num {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin-bottom: 6px;
+      }
+      .phase-icon {
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+      }
+      .phase-card h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .phase-card p {
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        line-height: 1.5;
+      }
+      .phase-tags {
+        margin-top: 14px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-dim);
+      }
+
+      /* ===== STAT GRID ===== */
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin-bottom: 40px;
+      }
+      .stat-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        text-align: center;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-glow);
+      }
+      .stat-val {
+        font-size: 1.9rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+      }
+      .stat-val.cyan {
+        color: var(--cyan);
+      }
+      .stat-val.green {
+        color: var(--green);
+      }
+      .stat-val.amber {
+        color: var(--amber);
+      }
+      .stat-val.blue {
+        color: var(--blue);
+      }
+      .stat-label {
+        font-size: 0.78rem;
+        color: var(--text-dim);
+        margin-top: 4px;
+      }
+
+      /* ===== MODEL TABLE ===== */
+      .model-table-wrap {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead th {
+        background: var(--bg3);
+        padding: 14px 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      tbody td {
+        padding: 14px 20px;
+        font-size: 0.88rem;
+        border-bottom: 1px solid rgba(99, 140, 255, 0.07);
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.025);
+      }
+      .model-name {
+        font-weight: 700;
+      }
+      .metric-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .metric-bar {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+      .metric-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .fill-blue {
+        background: linear-gradient(90deg, var(--blue), var(--cyan));
+      }
+      .fill-green {
+        background: linear-gradient(90deg, var(--green), var(--cyan));
+      }
+      .fill-amber {
+        background: linear-gradient(90deg, var(--amber), #ff9f3d);
+      }
+      .metric-val {
+        font-size: 0.82rem;
+        font-weight: 700;
+        width: 46px;
+        text-align: right;
+        color: var(--text);
+      }
+      .winner {
+        color: var(--green);
+      }
+
+      /* ===== CHARTS ===== */
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .chart-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        transition: box-shadow 0.25s;
+      }
+      .chart-card:hover {
+        box-shadow: var(--glow);
+      }
+      .chart-card.full {
+        grid-column: 1 / -1;
+      }
+      .chart-header {
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .chart-header h3 {
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .chart-header p {
+        font-size: 0.78rem;
+        color: var(--text-dim);
+        margin-top: 3px;
+      }
+      .chart-body {
+        padding: 16px;
+      }
+      .chart-body img {
+        width: 100%;
+        border-radius: 8px;
+        display: block;
+        background: #fff;
+      }
+      .chart-error {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: var(--text-dim);
+        font-size: 0.85rem;
+      }
+
+      /* ===== UPLOAD SECTION ===== */
+      .upload-area {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 48px 24px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.25s,
+          background 0.25s;
+        background: var(--bg2);
+        position: relative;
+      }
+      .upload-area:hover,
+      .upload-area.drag-over {
+        border-color: var(--blue);
+        background: rgba(79, 140, 255, 0.04);
+      }
+      .upload-area input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+      .upload-icon {
+        font-size: 2.8rem;
+        margin-bottom: 14px;
+      }
+      .upload-area h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+      .upload-area p {
+        font-size: 0.82rem;
+        color: var(--text-dim);
+      }
+      .upload-formats {
+        margin-top: 14px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      /* ===== RESULT PANEL ===== */
+      #result-panel {
+        display: none;
+        margin-top: 24px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .result-header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .result-header h3 {
+        font-size: 0.95rem;
+        font-weight: 700;
+      }
+      .result-header .filename {
+        margin-left: auto;
+        font-size: 0.78rem;
+        color: var(--text-dim);
+        font-family: monospace;
+      }
+      .result-body {
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .result-image-wrap {
+        border-radius: 10px;
+        overflow: hidden;
+        background: #111;
+        max-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .result-image-wrap img {
+        width: 100%;
+        object-fit: contain;
+        max-height: 300px;
+        display: block;
+      }
+      .result-metrics {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .metric-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: var(--bg3);
+        border-radius: 8px;
+      }
+      .metric-row .mkey {
+        font-size: 0.78rem;
+        color: var(--text-dim);
+      }
+      .metric-row .mval {
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+      .condition-clear {
+        color: var(--green);
+      }
+      .condition-neutral {
+        color: var(--amber);
+      }
+      .condition-cloudy {
+        color: var(--red);
+      }
+      .condition-day {
+        color: var(--cyan);
+      }
+
+      /* ===== STATUS PILL ===== */
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        border-radius: 99px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .status-pill::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+      .pill-observable {
+        background: rgba(61, 255, 160, 0.12);
+        color: var(--green);
+      }
+      .pill-observable::before {
+        background: var(--green);
+        box-shadow: 0 0 6px var(--green);
+        animation: pulse 2s infinite;
+      }
+      .pill-risky {
+        background: rgba(255, 201, 77, 0.12);
+        color: var(--amber);
+      }
+      .pill-risky::before {
+        background: var(--amber);
+      }
+      .pill-notobservable {
+        background: rgba(255, 94, 126, 0.12);
+        color: var(--red);
+      }
+      .pill-notobservable::before {
+        background: var(--red);
+      }
+      .pill-day {
+        background: rgba(56, 217, 245, 0.12);
+        color: var(--cyan);
+      }
+      .pill-day::before {
+        background: var(--cyan);
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* ===== LOADING SPINNER ===== */
+      #spinner {
+        display: none;
+        margin: 28px auto;
+        text-align: center;
+      }
+      .spinner-ring {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(79, 140, 255, 0.2);
+        border-top-color: var(--blue);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 12px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #spinner p {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+      }
+
+      /* ===== FOOTER ===== */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 0;
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 0.82rem;
+      }
+      footer a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* ===== DIVIDER ===== */
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 0;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .charts-grid {
+          grid-template-columns: 1fr;
+        }
+        .result-body {
+          grid-template-columns: 1fr;
+        }
+        .pipeline-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 520px) {
+        .pipeline-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ===== SCROLL ANIMATE ===== */
+      .fade-in {
+        opacity: 0;
+        transform: translateY(18px);
+        transition:
+          opacity 0.55s ease,
+          transform 0.55s ease;
+      }
+      .fade-in.visible {
+        opacity: 1;
+        transform: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav>
+      <div class="nav-inner">
+        <span class="nav-logo"
+          >🔭 SkyWatcher <span>v1.0 · TUG Bakırtepe</span></span
+        >
+        <div class="nav-links">
+          <a href="#pipeline">Pipeline</a>
+          <a href="#ml">ML Sonuçlar</a>
+          <a href="#grafik">Grafikler</a>
+          <a href="#analiz">Analiz</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-eyebrow fade-in">TUG Teleskop Otomasyonu</div>
+        <h1 class="fade-in">Gökyüzü Analiz<br />Sistemi</h1>
+        <p class="fade-in">
+          Ham teleskop görüntülerini otomatik sınıflandıran, ay maskeleyen ve
+          makine öğrenmesi ile doğrulayan bir bilgisayarlı görü pipeline'ı.
+        </p>
+        <div class="hero-tags fade-in">
+          <span class="badge badge-cyan">OpenCV</span>
+          <span class="badge badge-cyan">HoughCircles</span>
+          <span class="badge badge-green">SVM · KNN</span>
+          <span class="badge badge-amber">13,654 Görüntü</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- PIPELINE -->
+    <section class="section" id="pipeline">
+      <div class="container">
+        <div class="section-header fade-in">
+          <div class="section-label">Faz 1 → 4</div>
+          <h2 class="section-title">İşlem Pipeline'ı</h2>
+          <p class="section-sub">
+            Dört fazlı otomatik veri işleme ve sınıflandırma sistemi.
+          </p>
+        </div>
+        <div class="pipeline-grid">
+          <div class="phase-card fade-in">
+            <div class="phase-num">Faz 1</div>
+            <div class="phase-icon">📅</div>
+            <h3>Gece/Gündüz Ayırma</h3>
+            <p>
+              Dosya adından tarih çıkarılır. <code>ephem</code> kütüphanesiyle
+              güneş açısı hesaplanır (eşik: −12°). Gece ve gündüz görüntüleri
+              otomatik ayrıştırılır.
+            </p>
+            <div class="phase-tags">
+              <span class="tag">day_night_sorter.py</span>
+              <span class="tag">ephem</span>
+              <span class="tag">regex</span>
+            </div>
+          </div>
+          <div class="phase-card fade-in">
+            <div class="phase-num">Faz 2</div>
+            <div class="phase-icon">🌙</div>
+            <h3>Ay Maskeleme</h3>
+            <p>
+              Gece görüntülerinde Gaussian Blur + Hough Circle Transform ile ay
+              tespit edilir. Ay bölgesi siyah daire ile maskelenerek
+              sınıflandırıcıyı yanıltmaması sağlanır.
+            </p>
+            <div class="phase-tags">
+              <span class="tag">moon_masker.py</span>
+              <span class="tag">HoughCircles</span>
+              <span class="tag">cv2</span>
+            </div>
+          </div>
+          <div class="phase-card fade-in">
+            <div class="phase-num">Faz 3</div>
+            <div class="phase-icon">☁️</div>
+            <h3>Gökyüzü Sınıflandırma</h3>
+            <p>
+              Maskelenmiş görüntülerde ortalama parlaklık ve bulut yoğunluğu
+              hesaplanır. Eşik tabanlı kural motoru: CLEAR (&lt;20), NEUTRAL
+              (20–45), CLOUDY (&gt;45).
+            </p>
+            <div class="phase-tags">
+              <span class="tag">sky_classifier.py</span>
+              <span class="tag">threshold</span>
+              <span class="tag">numpy</span>
+            </div>
+          </div>
+          <div class="phase-card fade-in">
+            <div class="phase-num">Faz 4</div>
+            <div class="phase-icon">🤖</div>
+            <h3>ML Değerlendirme</h3>
+            <p>
+              3 özellik (parlaklık, bulut oranı, std sapma) çıkarılır. SVM (RBF)
+              ve KNN (k=5) eğitilir. 80/20 train-test split, StandardScaler,
+              confusion matrix.
+            </p>
+            <div class="phase-tags">
+              <span class="tag">evaluate.py</span>
+              <span class="tag">scikit-learn</span>
+              <span class="tag">SVM · KNN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ML SONUÇLAR -->
+    <section class="section" id="ml">
+      <div class="container">
+        <div class="section-header fade-in">
+          <div class="section-label">Faz 4 Çıktıları</div>
+          <h2 class="section-title">ML Değerlendirme Sonuçları</h2>
+          <p class="section-sub">
+            13,654 görüntü · 80/20 train-test split · StandardScaler ·
+            stratified
+          </p>
+        </div>
+
+        <!-- Dataset Stats -->
+        <div class="stat-grid fade-in">
+          <div class="stat-card">
+            <div class="stat-val cyan">13,654</div>
+            <div class="stat-label">Toplam gece görüntüsü</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val green">796</div>
+            <div class="stat-label">CLEAR (açık)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val amber">9,760</div>
+            <div class="stat-label">NEUTRAL (parçalı)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" style="color: var(--red)">3,098</div>
+            <div class="stat-label">CLOUDY (kapalı)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val blue">10,923</div>
+            <div class="stat-label">Train seti (%80)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val blue">2,731</div>
+            <div class="stat-label">Test seti (%20)</div>
+          </div>
+        </div>
+
+        <!-- Model Karşılaştırma Tablosu -->
+        <div class="model-table-wrap fade-in">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Accuracy</th>
+                <th>Precision (macro)</th>
+                <th>Recall (macro)</th>
+                <th>F1 (macro)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="model-name" style="color: var(--blue)"
+                    >SVM (RBF Kernel)</span
+                  >
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-blue"
+                        style="width: 0%"
+                        data-w="97.11"
+                      ></div>
+                    </div>
+                    <span class="metric-val">0.9711</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-blue"
+                        style="width: 0%"
+                        data-w="98.21"
+                      ></div>
+                    </div>
+                    <span class="metric-val">0.9821</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-blue"
+                        style="width: 0%"
+                        data-w="86.41"
+                      ></div>
+                    </div>
+                    <span class="metric-val">0.8641</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-blue"
+                        style="width: 0%"
+                        data-w="90.67"
+                      ></div>
+                    </div>
+                    <span class="metric-val">0.9067</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="model-name winner">★ KNN (k=5)</span></td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-green"
+                        style="width: 0%"
+                        data-w="98.94"
+                      ></div>
+                    </div>
+                    <span class="metric-val winner">0.9894</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-green"
+                        style="width: 0%"
+                        data-w="97.45"
+                      ></div>
+                    </div>
+                    <span class="metric-val winner">0.9745</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-green"
+                        style="width: 0%"
+                        data-w="98.06"
+                      ></div>
+                    </div>
+                    <span class="metric-val winner">0.9806</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-green"
+                        style="width: 0%"
+                        data-w="97.75"
+                      ></div>
+                    </div>
+                    <span class="metric-val winner">0.9775</span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="model-name" style="color: var(--amber)"
+                    >Baseline (Threshold)</span
+                  >
+                </td>
+                <td>
+                  <div class="metric-bar-wrap">
+                    <div class="metric-bar">
+                      <div
+                        class="metric-bar-fill fill-amber"
+                        style="width: 0%"
+                        data-w="99.30"
+                      ></div>
+                    </div>
+                    <span class="metric-val">0.9930</span>
+                  </div>
+                </td>
+                <td
+                  colspan="3"
+                  style="color: var(--text-dim); font-size: 0.8rem"
+                >
+                  Sadece mean_brightness eşiğine dayanır — class imbalance
+                  yanlılığı var
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- GRAFİKLER -->
+    <section class="section" id="grafik">
+      <div class="container">
+        <div class="section-header fade-in">
+          <div class="section-label">evaluate.py Çıktıları</div>
+          <h2 class="section-title">Görselleştirme</h2>
+          <p class="section-sub">
+            outputs/ klasöründen canlı yüklenen ML değerlendirme grafikleri.
+          </p>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card fade-in">
+            <div class="chart-header">
+              <h3>Confusion Matrix — SVM (RBF)</h3>
+              <p>Test seti üzerinde SVM tahmin hataları</p>
+            </div>
+            <div class="chart-body">
+              <img
+                src="/outputs/confusion_matrix_svm.png"
+                alt="SVM Confusion Matrix"
+                onerror="
+                  this.parentElement.innerHTML =
+                    '<div class=\'chart-error\'>⚠️ Grafik bulunamadı. evaluate.py çalıştırın.</div>'
+                "
+              />
+            </div>
+          </div>
+          <div class="chart-card fade-in">
+            <div class="chart-header">
+              <h3>Confusion Matrix — KNN (k=5)</h3>
+              <p>Test seti üzerinde KNN tahmin hataları</p>
+            </div>
+            <div class="chart-body">
+              <img
+                src="/outputs/confusion_matrix_knn.png"
+                alt="KNN Confusion Matrix"
+                onerror="
+                  this.parentElement.innerHTML =
+                    '<div class=\'chart-error\'>⚠️ Grafik bulunamadı. evaluate.py çalıştırın.</div>'
+                "
+              />
+            </div>
+          </div>
+          <div class="chart-card full fade-in">
+            <div class="chart-header">
+              <h3>Model Karşılaştırma — SVM vs KNN vs Baseline</h3>
+              <p>
+                Accuracy · Precision · Recall · F1 karşılaştırmalı çubuk grafiği
+              </p>
+            </div>
+            <div class="chart-body">
+              <img
+                src="/outputs/comparison.png"
+                alt="Model Comparison"
+                onerror="
+                  this.parentElement.innerHTML =
+                    '<div class=\'chart-error\'>⚠️ Grafik bulunamadı. evaluate.py çalıştırın.</div>'
+                "
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- CANLI ANALİZ -->
+    <section class="section" id="analiz">
+      <div class="container">
+        <div class="section-header fade-in">
+          <div class="section-label">Canlı Demo</div>
+          <h2 class="section-title">Görüntü Analizi</h2>
+          <p class="section-sub">
+            Bir teleskop görüntüsü yükleyin — Faz 1→3 pipeline'ı gerçek zamanlı
+            çalıştırılır. Dosya adında tarih varsa
+            (<code>YYYY_MM_DD__HH_MM_SS</code>) otomatik gece/gündüz tespiti
+            yapılır.
+          </p>
+        </div>
+
+        <div class="upload-area fade-in" id="upload-area">
+          <input
+            type="file"
+            id="file-input"
+            accept=".jpg,.jpeg,.png,.bmp,.tiff,.tif"
+          />
+          <div class="upload-icon">📡</div>
+          <h3>Görüntü Yükle</h3>
+          <p>Sürükle-bırak veya tıkla seç</p>
+          <div class="upload-formats">
+            <span class="tag">JPG</span>
+            <span class="tag">JPEG</span>
+            <span class="tag">PNG</span>
+            <span class="tag">BMP</span>
+            <span class="tag">TIFF</span>
+          </div>
+        </div>
+
+        <!-- Spinner -->
+        <div id="spinner">
+          <div class="spinner-ring"></div>
+          <p>Analiz ediliyor…</p>
+        </div>
+
+        <!-- Sonuç Paneli -->
+        <div id="result-panel">
+          <div class="result-header">
+            <div id="result-condition-badge"></div>
+            <h3 id="result-title">Analiz Sonucu</h3>
+            <span class="filename" id="result-filename"></span>
+          </div>
+          <div class="result-body">
+            <div class="result-image-wrap">
+              <img id="result-img" src="" alt="Yüklenen görüntü" />
+            </div>
+            <div class="result-metrics" id="result-metrics"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="container">
+        <p>
+          SkyWatcher &mdash; TUG Bakırtepe Teleskop Otomasyon Projesi
+          &nbsp;·&nbsp; <span id="footer-year"></span> &nbsp;·&nbsp; Python ·
+          OpenCV · scikit-learn · Flask
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      /* ===== FADE-IN ON SCROLL ===== */
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("visible");
+            }
+          });
+        },
+        { threshold: 0.08 },
+      );
+      document
+        .querySelectorAll(".fade-in")
+        .forEach((el) => observer.observe(el));
+
+      /* ===== METRIC BAR ANIMATE ===== */
+      const barObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.querySelectorAll(".metric-bar-fill").forEach((bar) => {
+                bar.style.width = bar.dataset.w + "%";
+              });
+              barObserver.unobserve(e.target);
+            }
+          });
+        },
+        { threshold: 0.3 },
+      );
+      document
+        .querySelectorAll(".model-table-wrap")
+        .forEach((el) => barObserver.observe(el));
+
+      /* ===== FOOTER YEAR ===== */
+      document.getElementById("footer-year").textContent =
+        new Date().getFullYear();
+
+      /* ===== UPLOAD / ANALYZE ===== */
+      const fileInput = document.getElementById("file-input");
+      const uploadArea = document.getElementById("upload-area");
+      const spinner = document.getElementById("spinner");
+      const resultPanel = document.getElementById("result-panel");
+
+      // Drag-over visual
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("drag-over");
+      });
+      uploadArea.addEventListener("dragleave", () =>
+        uploadArea.classList.remove("drag-over"),
+      );
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("drag-over");
+        const file = e.dataTransfer?.files[0];
+        if (file) handleFile(file);
+      });
+
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files[0]) handleFile(fileInput.files[0]);
+      });
+
+      function handleFile(file) {
+        // Preview image immediately
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById("result-img").src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // Hide previous result, show spinner
+        resultPanel.style.display = "none";
+        spinner.style.display = "block";
+        spinner.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        const fd = new FormData();
+        fd.append("file", file);
+
+        fetch("/api/analyze", { method: "POST", body: fd })
+          .then((r) => r.json())
+          .then((data) => {
+            spinner.style.display = "none";
+            renderResult(data, file.name);
+            resultPanel.style.display = "block";
+            resultPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+          })
+          .catch((err) => {
+            spinner.style.display = "none";
+            renderResult(
+              { error: "Sunucuya bağlanılamadı: " + err.message },
+              file.name,
+            );
+            resultPanel.style.display = "block";
+          });
+      }
+
+      function renderResult(data, filename) {
+        document.getElementById("result-filename").textContent = filename;
+
+        if (data.error) {
+          document.getElementById("result-title").textContent = "Hata";
+          document.getElementById("result-condition-badge").innerHTML =
+            `<span class="badge" style="background:rgba(255,94,126,.15);color:var(--red)">❌ Hata</span>`;
+          document.getElementById("result-metrics").innerHTML = `
+        <div class="metric-row">
+          <span class="mkey">Hata Mesajı</span>
+          <span class="mval" style="color:var(--red)">${data.error}</span>
+        </div>`;
+          return;
+        }
+
+        const condition = (data.sky_condition || "").toUpperCase();
+        const timeOfDay = (data.time_of_day || "").toUpperCase();
+        const status = (data.status || "").toUpperCase().replace("_", "");
+
+        // Condition color class
+        const condClass =
+          {
+            CLEAR: "condition-clear",
+            NEUTRAL: "condition-neutral",
+            CLOUDY: "condition-cloudy",
+          }[condition] || "condition-day";
+
+        const condEmoji =
+          { CLEAR: "✨", NEUTRAL: "⛅", CLOUDY: "☁️" }[condition] || "🔵";
+        const timeEmoji = timeOfDay === "NIGHT" ? "🌙" : "☀️";
+
+        // Status pill
+        const pillClass =
+          {
+            OBSERVABLE: "pill-observable",
+            RISKY: "pill-risky",
+            NOTOBSERVABLE: "pill-notobservable",
+          }[status] || "pill-day";
+        const pillLabel =
+          {
+            OBSERVABLE: "Gözlem Yapılabilir",
+            RISKY: "Riskli",
+            NOTOBSERVABLE: "Gözlem Yapılamaz",
+          }[status] || timeOfDay;
+
+        document.getElementById("result-title").textContent =
+          `${condEmoji} ${condition} — ${data.description || ""}`;
+        document.getElementById("result-condition-badge").innerHTML =
+          `<span class="status-pill ${pillClass}">${pillLabel}</span>`;
+
+        // Metric rows
+        const rows = [
+          [
+            "⏰ Zaman",
+            `${timeEmoji} ${timeOfDay}` +
+              (data.datetime ? ` · ${data.datetime}` : ""),
+          ],
+          [
+            "☁️ Gökyüzü Durumu",
+            `<span class="${condClass}">${condition}</span>`,
+          ],
+          [
+            "💡 Ortalama Parlaklık",
+            data.mean_brightness != null
+              ? data.mean_brightness.toFixed(2)
+              : "—",
+          ],
+        ];
+
+        if (data.cloud_coverage_percent != null) {
+          rows.push(["🌫️ Bulut Oranı", `%${data.cloud_coverage_percent}`]);
+        }
+        if (data.std_deviation != null) {
+          rows.push(["📈 Std Sapma", data.std_deviation.toFixed(2)]);
+        }
+        if (data.blue_ratio != null) {
+          rows.push(["🔵 Mavi Oran", data.blue_ratio.toFixed(4)]);
+        }
+
+        rows.push([
+          "🌙 Ay Tespiti",
+          data.moon_detected
+            ? `✅ Tespit edildi · (${data.moon_center?.join(", ")}) · r=${data.moon_radius}px · güven ${data.moon_confidence}%`
+            : "❌ Tespit edilmedi",
+        ]);
+
+        document.getElementById("result-metrics").innerHTML = rows
+          .map(
+            ([k, v]) => `
+      <div class="metric-row">
+        <span class="mkey">${k}</span>
+        <span class="mval">${v}</span>
+      </div>`,
+          )
+          .join("");
+      }
+    </script>
+  </body>
+</html>
