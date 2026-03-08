@@ -719,7 +719,133 @@
         opacity: 1;
         transform: none;
       }
+
+      /* ===== CONFUSION MATRIX ===== */
+      .cm-body {
+        padding: 20px 16px 16px;
+      }
+      .cm-top-axis {
+        text-align: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin-bottom: 8px;
+      }
+      .cm-inner {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .cm-left-axis {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .cm-left-axis span {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
+      }
+      .cm-grid {
+        display: grid;
+        grid-template-columns: auto repeat(3, 1fr);
+        gap: 4px;
+        flex: 1;
+      }
+      .cm-corner {
+      }
+      .cm-col-hdr {
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-align: center;
+        padding: 5px 2px;
+        color: var(--text-dim);
+        letter-spacing: 0.3px;
+        border-radius: 6px 6px 0 0;
+        transition: all 0.35s ease;
+      }
+      .cm-row-hdr {
+        font-size: 0.68rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        padding-right: 8px;
+        color: var(--text-dim);
+        white-space: nowrap;
+      }
+      .cm-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 4px;
+        border-radius: 6px;
+        min-width: 60px;
+        min-height: 56px;
+        transition: all 0.35s ease;
+        cursor: default;
+      }
+      .cm-diag {
+        background: rgba(61, 255, 160, calc(var(--intensity, 0) * 0.55 + 0.08));
+      }
+      .cm-off {
+        background: rgba(255, 94, 126, calc(var(--intensity, 0) * 0.65 + 0.04));
+      }
+      .cm-val {
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .cm-pct {
+        font-size: 0.62rem;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+      .cm-diag .cm-val {
+        color: var(--green);
+      }
+      .cm-off .cm-val {
+        color: var(--red);
+      }
+      /* Highlight — predicted column */
+      .cm-col-hdr.cm-highlighted {
+        color: var(--cyan);
+        background: rgba(56, 217, 245, 0.15);
+        box-shadow: 0 0 0 1px rgba(56, 217, 245, 0.35);
+      }
+      .cm-cell.cm-highlighted {
+        box-shadow: 0 0 0 2px rgba(56, 217, 245, 0.5);
+        filter: brightness(1.35);
+      }
+      .cm-cell.cm-dim {
+        filter: brightness(0.38) saturate(0.25);
+      }
+      .cm-col-hdr.cm-dim {
+        opacity: 0.3;
+      }
+      .cm-row-hdr.cm-dim {
+        opacity: 0.3;
+      }
+      .cm-hint {
+        margin-top: 10px;
+        text-align: center;
+        font-size: 0.72rem;
+        color: var(--text-dim);
+        min-height: 18px;
+        transition: all 0.3s;
+      }
+      .cm-hint.active {
+        color: var(--cyan);
+      }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   </head>
   <body>
     <!-- NAV -->
@@ -1034,58 +1160,77 @@
           <div class="section-label">evaluate.py Çıktıları</div>
           <h2 class="section-title">Görselleştirme</h2>
           <p class="section-sub">
-            outputs/ klasöründen canlı yüklenen ML değerlendirme grafikleri.
+            Görüntü yükleyince confusion matrix'te tahmin edilen sınıf
+            vurgulanır ve karşılaştırma grafiği o sınıfa özel metriklere geçer.
           </p>
         </div>
         <div class="charts-grid">
+          <!-- Confusion Matrix — SVM -->
           <div class="chart-card fade-in">
             <div class="chart-header">
               <h3>Confusion Matrix — SVM (RBF)</h3>
-              <p>Test seti üzerinde SVM tahmin hataları</p>
+              <p>
+                Test seti üzerinde SVM tahmin hataları · görüntü yükleyince
+                aktif sınıf vurgulanır
+              </p>
             </div>
-            <div class="chart-body">
-              <img
-                src="/outputs/confusion_matrix_svm.png"
-                alt="SVM Confusion Matrix"
-                onerror="
-                  this.parentElement.innerHTML =
-                    '<div class=\'chart-error\'>⚠️ Grafik bulunamadı. evaluate.py çalıştırın.</div>'
-                "
-              />
+            <div class="cm-body">
+              <div class="cm-top-axis">Tahmin Edilen</div>
+              <div class="cm-inner">
+                <div class="cm-left-axis"><span>Gerçek</span></div>
+                <div id="cm-svm" class="cm-grid"></div>
+              </div>
+              <div id="cm-svm-hint" class="cm-hint">
+                Görüntü yükleyince ilgili sütun vurgulanır
+              </div>
             </div>
           </div>
+
+          <!-- Confusion Matrix — KNN -->
           <div class="chart-card fade-in">
             <div class="chart-header">
               <h3>Confusion Matrix — KNN (k=5)</h3>
-              <p>Test seti üzerinde KNN tahmin hataları</p>
+              <p>
+                Test seti üzerinde KNN tahmin hataları · görüntü yükleyince
+                aktif sınıf vurgulanır
+              </p>
             </div>
-            <div class="chart-body">
-              <img
-                src="/outputs/confusion_matrix_knn.png"
-                alt="KNN Confusion Matrix"
-                onerror="
-                  this.parentElement.innerHTML =
-                    '<div class=\'chart-error\'>⚠️ Grafik bulunamadı. evaluate.py çalıştırın.</div>'
-                "
-              />
+            <div class="cm-body">
+              <div class="cm-top-axis">Tahmin Edilen</div>
+              <div class="cm-inner">
+                <div class="cm-left-axis"><span>Gerçek</span></div>
+                <div id="cm-knn" class="cm-grid"></div>
+              </div>
+              <div id="cm-knn-hint" class="cm-hint">
+                Görüntü yükleyince ilgili sütun vurgulanır
+              </div>
             </div>
           </div>
+
+          <!-- Model Karşılaştırma — Chart.js -->
           <div class="chart-card full fade-in">
             <div class="chart-header">
-              <h3>Model Karşılaştırma — SVM vs KNN vs Baseline</h3>
-              <p>
-                Accuracy · Precision · Recall · F1 karşılaştırmalı çubuk grafiği
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  flex-wrap: wrap;
+                  margin-bottom: 4px;
+                "
+              >
+                <h3 id="comp-title">
+                  Model Karşılaştırma — SVM vs KNN vs Baseline
+                </h3>
+                <div id="comp-badge"></div>
+              </div>
+              <p id="comp-subtitle">
+                Genel test seti metrikleri · görüntü yükleyince tahmin edilen
+                sınıfa özel güvenilirlik gösterilir
               </p>
             </div>
             <div class="chart-body">
-              <img
-                src="/outputs/comparison.png"
-                alt="Model Comparison"
-                onerror="
-                  this.parentElement.innerHTML =
-                    '<div class=\'chart-error\'>⚠️ Grafik bulunamadı. evaluate.py çalıştırın.</div>'
-                "
-              />
+              <canvas id="comparison-chart" style="max-height: 320px"></canvas>
             </div>
           </div>
         </div>
@@ -1352,7 +1497,292 @@
       </div>`,
           )
           .join("");
+
+        // Update dynamic charts
+        updateDynamicCharts(data);
       }
+
+      /* =====================================================
+         ML DATA — from evaluate.py results
+         ===================================================== */
+      const ML_DATA = {
+        classes: ["CLEAR", "NEUTRAL", "CLOUDY"],
+        svm: {
+          overall: {
+            accuracy: 0.9711,
+            precision: 0.9821,
+            recall: 0.8641,
+            f1: 0.9067,
+          },
+          perClass: {
+            CLEAR: { precision: 1.0, recall: 0.6, f1: 0.75 },
+            NEUTRAL: { precision: 0.97, recall: 0.99, f1: 0.98 },
+            CLOUDY: { precision: 0.98, recall: 1.0, f1: 0.99 },
+          },
+          cm: [
+            [95, 55, 9],
+            [0, 1940, 12],
+            [0, 2, 618],
+          ],
+        },
+        knn: {
+          overall: {
+            accuracy: 0.9894,
+            precision: 0.9745,
+            recall: 0.9806,
+            f1: 0.9775,
+          },
+          perClass: {
+            CLEAR: { precision: 0.94, recall: 0.96, f1: 0.95 },
+            NEUTRAL: { precision: 0.99, recall: 0.99, f1: 0.99 },
+            CLOUDY: { precision: 0.99, recall: 0.99, f1: 0.985 },
+          },
+          cm: [
+            [153, 4, 2],
+            [8, 1933, 11],
+            [2, 5, 613],
+          ],
+        },
+        baseline: { accuracy: 0.993 },
+      };
+
+      /* =====================================================
+         CONFUSION MATRIX — builder
+         ===================================================== */
+      function buildConfusionMatrix(gridId, modelKey) {
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+        const { cm } = ML_DATA[modelKey];
+        const classes = ML_DATA.classes;
+        const maxVal = Math.max(...cm.flat());
+
+        let html = `<div class="cm-corner"></div>`;
+        // Column headers
+        classes.forEach((c, ci) => {
+          html += `<div class="cm-col-hdr" data-col="${ci}">${c}</div>`;
+        });
+        // Rows
+        cm.forEach((row, ri) => {
+          const rowSum = row.reduce((a, b) => a + b, 0);
+          html += `<div class="cm-row-hdr" data-row="${ri}">${classes[ri]}</div>`;
+          row.forEach((val, ci) => {
+            const intensity = (val / maxVal).toFixed(3);
+            const isDiag = ri === ci;
+            const pct = ((val / rowSum) * 100).toFixed(1);
+            html +=
+              `<div class="cm-cell ${isDiag ? "cm-diag" : "cm-off"}" ` +
+              `data-col="${ci}" data-row="${ri}" style="--intensity:${intensity}" ` +
+              `title="Gerçek: ${classes[ri]} → Tahmin: ${classes[ci]} = ${val.toLocaleString()}">`;
+            html += `<span class="cm-val">${val.toLocaleString()}</span>`;
+            html += `<span class="cm-pct">${pct}%</span>`;
+            html += `</div>`;
+          });
+        });
+        grid.innerHTML = html;
+      }
+
+      function highlightConfusionMatrix(gridId, hintId, predictedIdx) {
+        const grid = document.getElementById(gridId);
+        const hint = document.getElementById(hintId);
+        if (!grid) return;
+
+        grid
+          .querySelectorAll(".cm-col-hdr, .cm-cell, .cm-row-hdr")
+          .forEach((el) => {
+            el.classList.remove("cm-highlighted", "cm-dim");
+          });
+
+        if (predictedIdx < 0) {
+          if (hint) {
+            hint.textContent = "Görüntü yükleyince ilgili sütun vurgulanır";
+            hint.classList.remove("active");
+          }
+          return;
+        }
+
+        const cls = ML_DATA.classes[predictedIdx];
+        grid.querySelectorAll(".cm-col-hdr").forEach((el) => {
+          parseInt(el.dataset.col) === predictedIdx
+            ? el.classList.add("cm-highlighted")
+            : el.classList.add("cm-dim");
+        });
+        grid.querySelectorAll(".cm-cell").forEach((el) => {
+          parseInt(el.dataset.col) === predictedIdx
+            ? el.classList.add("cm-highlighted")
+            : el.classList.add("cm-dim");
+        });
+        grid.querySelectorAll(".cm-row-hdr").forEach((el) => {
+          parseInt(el.dataset.row) === predictedIdx
+            ? el.classList.remove("cm-dim")
+            : el.classList.add("cm-dim");
+        });
+
+        const condEmoji =
+          { CLEAR: "✨", NEUTRAL: "⛅", CLOUDY: "☁️" }[cls] || "";
+        if (hint) {
+          hint.textContent = `${condEmoji} "${cls}" olarak tahmin edildi — vurgulanan sütun bu sınıfa ait tüm tahminleri gösterir`;
+          hint.classList.add("active");
+        }
+      }
+
+      /* =====================================================
+         COMPARISON CHART (Chart.js)
+         ===================================================== */
+      let compChart = null;
+
+      function initComparisonChart() {
+        const ctx = document.getElementById("comparison-chart");
+        if (!ctx) return;
+        Chart.defaults.color = "#8892b0";
+        Chart.defaults.borderColor = "rgba(99,140,255,0.1)";
+
+        compChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Accuracy", "Precision", "Recall", "F1 Score"],
+            datasets: [
+              {
+                label: "SVM (RBF)",
+                data: [0.9711, 0.9821, 0.8641, 0.9067],
+                backgroundColor: "rgba(79,140,255,0.75)",
+                borderColor: "#4f8cff",
+                borderWidth: 1.5,
+                borderRadius: 6,
+              },
+              {
+                label: "KNN (k=5)",
+                data: [0.9894, 0.9745, 0.9806, 0.9775],
+                backgroundColor: "rgba(61,255,160,0.75)",
+                borderColor: "#3dffa0",
+                borderWidth: 1.5,
+                borderRadius: 6,
+              },
+              {
+                label: "Baseline",
+                data: [0.993, null, null, null],
+                backgroundColor: "rgba(255,201,77,0.75)",
+                borderColor: "#ffc94d",
+                borderWidth: 1.5,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: "top",
+                labels: { padding: 20, font: { size: 12 }, color: "#8892b0" },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (c) =>
+                    `${c.dataset.label}: ${c.parsed.y != null ? (c.parsed.y * 100).toFixed(2) + "%" : "—"}`,
+                },
+              },
+            },
+            scales: {
+              x: {
+                grid: { color: "rgba(99,140,255,0.08)" },
+                ticks: { color: "#8892b0", font: { size: 11 } },
+              },
+              y: {
+                min: 0.5,
+                max: 1.05,
+                grid: { color: "rgba(99,140,255,0.08)" },
+                ticks: {
+                  color: "#8892b0",
+                  font: { size: 11 },
+                  callback: (v) => (v * 100).toFixed(0) + "%",
+                },
+              },
+            },
+            animation: { duration: 700, easing: "easeInOutQuart" },
+          },
+        });
+      }
+
+      function updateComparisonChart(predictedClass) {
+        if (!compChart) return;
+        const titleEl = document.getElementById("comp-title");
+        const subEl = document.getElementById("comp-subtitle");
+        const badgeEl = document.getElementById("comp-badge");
+
+        if (!predictedClass) {
+          // Reset to overall
+          compChart.data.labels = [
+            "Accuracy",
+            "Precision",
+            "Recall",
+            "F1 Score",
+          ];
+          compChart.data.datasets[0].data = [0.9711, 0.9821, 0.8641, 0.9067];
+          compChart.data.datasets[0].label = "SVM (RBF)";
+          compChart.data.datasets[1].data = [0.9894, 0.9745, 0.9806, 0.9775];
+          compChart.data.datasets[1].label = "KNN (k=5)";
+          compChart.data.datasets[2].data = [0.993, null, null, null];
+          compChart.data.datasets[2].label = "Baseline";
+          if (titleEl)
+            titleEl.textContent =
+              "Model Karşılaştırma — SVM vs KNN vs Baseline";
+          if (subEl)
+            subEl.textContent =
+              "Genel test seti metrikleri · görüntü yükleyince tahmin edilen sınıfa özel güvenilirlik gösterilir";
+          if (badgeEl) badgeEl.innerHTML = "";
+        } else {
+          const svm = ML_DATA.svm.perClass[predictedClass];
+          const knn = ML_DATA.knn.perClass[predictedClass];
+          compChart.data.labels = ["Precision", "Recall", "F1 Score"];
+          compChart.data.datasets[0].data = [svm.precision, svm.recall, svm.f1];
+          compChart.data.datasets[0].label = `SVM — ${predictedClass}`;
+          compChart.data.datasets[1].data = [knn.precision, knn.recall, knn.f1];
+          compChart.data.datasets[1].label = `KNN — ${predictedClass}`;
+          compChart.data.datasets[2].data = [null, null, null];
+          compChart.data.datasets[2].label = "Baseline (N/A)";
+          if (titleEl)
+            titleEl.textContent = `Model Güvenilirliği — "${predictedClass}" Sınıfı`;
+          if (subEl)
+            subEl.textContent = `Yüklenen görüntü ${predictedClass} tahmin edildi · Bu sınıf için SVM vs KNN performansı`;
+          const condColor =
+            {
+              CLEAR: "var(--green)",
+              NEUTRAL: "var(--amber)",
+              CLOUDY: "var(--red)",
+            }[predictedClass] || "var(--cyan)";
+          const condEmoji =
+            { CLEAR: "✨", NEUTRAL: "⛅", CLOUDY: "☁️" }[predictedClass] || "";
+          if (badgeEl)
+            badgeEl.innerHTML = `<span style="background:rgba(255,255,255,0.06);color:${condColor};font-size:0.78rem;padding:4px 14px;border-radius:99px;font-weight:700;display:inline-block;">${condEmoji} ${predictedClass}</span>`;
+        }
+        compChart.update("active");
+      }
+
+      /* =====================================================
+         UNIFIED UPDATE — called after every analysis
+         ===================================================== */
+      function updateDynamicCharts(data) {
+        const condition = (data.sky_condition || "").toUpperCase();
+        const classIdx = ML_DATA.classes.indexOf(condition); // -1 for DAY or error
+        highlightConfusionMatrix("cm-svm", "cm-svm-hint", classIdx);
+        highlightConfusionMatrix("cm-knn", "cm-knn-hint", classIdx);
+        updateComparisonChart(classIdx >= 0 ? condition : null);
+        // Scroll to charts section
+        setTimeout(
+          () =>
+            document
+              .getElementById("grafik")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+          400,
+        );
+      }
+
+      /* =====================================================
+         INIT on load
+         ===================================================== */
+      buildConfusionMatrix("cm-svm", "svm");
+      buildConfusionMatrix("cm-knn", "knn");
+      initComparisonChart();
     </script>
   </body>
 </html>

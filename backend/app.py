@@ -113,12 +113,15 @@ def analyze_night_image(image_path: str, img: np.ndarray) -> dict:
             "NEUTRAL": "Parçalı bulutlu - Riskli",
             "CLOUDY": "Kapalı - Gözlem yapılamaz",
         }
+        std_deviation = round(float(np.std(gray)), 2)
+        cloud_coverage_raw = round(float(np.sum(gray > 30) / gray.size * 100), 2)
         return {
             "time_of_day": "NIGHT",
             "sky_condition": condition,
             "description": desc_map.get(condition, condition),
             "mean_brightness": r["mean_brightness"],
-            "std_deviation": None,
+            "std_deviation": std_deviation,
+            "cloud_coverage_raw": cloud_coverage_raw,
             "blue_ratio": None,
             "cloud_coverage_percent": r["cloud_coverage_percent"],
             "status": r["status"],
